@@ -32,14 +32,21 @@ async def receive_message(request: Request):
     print("Incoming message:", body)
 
     try:
-        message = body["entry"][0]["changes"][0]["value"]["messages"][0]
-        sender = message["from"]
-        text = message["text"]["body"]
+        value = body["entry"][0]["changes"][0]["value"]
 
-        send_message(sender, f"🧼 SoapAI received: {text}")
+        # ✅ Only respond if it's an actual message
+        if "messages" in value:
+            message = value["messages"][0]
+            sender = message["from"]
+            text = message["text"]["body"]
+
+            send_message(sender, f"🧼 SoapAI received: {text}")
+
+        else:
+            print("No user message found (likely status update).")
 
     except Exception as e:
-        print("Error processing message:", e)
+        print("Error processing webhook:", e)
 
     return {"status": "ok"}
 
@@ -63,3 +70,4 @@ def send_message(to, text):
 
     response = requests.post(url, headers=headers, json=data)
     print("Send response:", response.status_code, response.text)
+
